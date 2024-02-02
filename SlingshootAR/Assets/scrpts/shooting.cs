@@ -1,55 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.XR.ARFoundation;
+
 
 public class shooting : MonoBehaviour
 {
+    private GameObject Projectile;
+    private Rigidbody ProjectileRB;
+    [SerializeField] private GameObject ProjectilePrefab;
+    private float distance;
+    private Vector2 startpos, endpos;
 
-    [SerializeField] private Rigidbody Bulletrb;
-    private bool isshoot;
-    [SerializeField] private Transform BulletSpawnPoint;
-    [SerializeField] private GameObject Bullet;
-    private float shootingforce = 5f;
-    private Vector2 touchstartpos;
-    private Vector2 touchendpos;
-    void Start()
+    
+    void Update()
     {
-  
-        isshoot = false;
-        Bulletrb.useGravity = false;
-       
-    }
+        Touch touch = Input.GetTouch(0);
+        if (touch.phase == TouchPhase.Began)
+        {
+            startpos = touch.position;
+        }
+        else if (touch.phase == TouchPhase.Ended)
+        {
+            endpos = touch.position;
+        }
 
-     void FixedUpdate()
-    {
+
         if (Input.touchCount > 0)
         {
-            Touch touch = Input.GetTouch(0);
-            Instantiate(Bullet, BulletSpawnPoint.position, Quaternion.identity);
-
             if (touch.phase == TouchPhase.Began)
             {
-                touchstartpos = touch.position;
+
+                Projectile = Instantiate(ProjectilePrefab, startpos, Quaternion.identity);
+                ProjectileRB = ProjectilePrefab.GetComponent<Rigidbody>();
+                ProjectileRB.useGravity = false;
+            }
+            else if (touch.phase == TouchPhase.Moved)
+            {
+                Projectile.transform.position = touch.position;
             }
             else if (touch.phase == TouchPhase.Ended)
             {
-                touchendpos = touch.position;
+                distance = Vector2.Distance(startpos, endpos);
+                ProjectileRB.AddForce(new Vector3(0f, 0f, distance) * 3f);
+                ProjectileRB.useGravity = true;
+                
             }
+            
         }
-
-        float distance = Vector2.Distance(touchstartpos, touchendpos);
-        Bulletrb.AddForce(new Vector3(0f, 0f, distance) * shootingforce, ForceMode.Impulse);
-        isshoot = true;
-        Bulletrb.useGravity = true;
-        Invoke("DestroyBullet", 3f);
+        
     }
-
-    void DestroyBullet()
-    {
-        Destroy(Bullet);
-    }
-
-
 }
+
